@@ -186,6 +186,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final boolean singleRow;
     /** config always_show_names: the alpha of an unfocused tile's name (0 hides it). */
     private final float restNameAlpha;
+    /** tile_name_color, or 0 for the layout's white. */
+    private final int nameColor;
     /** cinematic_home: only then does a launch record the last-opened app the shelf uses. */
     private final boolean cinematic;
     /** Dock order (config.xml dock_apps, or a theme's config.json). */
@@ -239,6 +241,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.dockRow = cfg.dockRow;
         this.singleRow = cfg.singleRow;
         this.restNameAlpha = cfg.alwaysShowNames ? 0.75f : 0f;
+        this.nameColor = cfg.tileNameColor;
         this.cinematic = cfg.cinematicHome;
         this.launchActions = cfg.launchActions;
         this.iconTiles = new HashSet<>(Arrays.asList(ctx.getResources().getStringArray(R.array.icon_tiles)));
@@ -472,6 +475,12 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.card.setVisibility(View.VISIBLE);
         h.card.setFocusable(true);
         h.name.setText(e.name);
+        if (nameColor != 0) {
+            // tile_name_color, shadowed so it reads over a wallpaper.
+            h.name.setTextColor(nameColor);
+            float d = h.name.getResources().getDisplayMetrics().density;
+            h.name.setShadowLayer(4 * d, 0, d, 0xCC000000);
+        }
         // The dock has no labels, unless always_show_names asks for them (DockDecoration then makes room in the band).
         // In a single row every tile is the dock's kind: the big title above names it.
         boolean dockKind = dockRow && (singleRow || position < dockSize);

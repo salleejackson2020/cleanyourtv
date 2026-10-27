@@ -149,6 +149,16 @@ final class Config {
     final boolean uniformTiles;
     /** Background colour behind everything, #RRGGBB; black unless a theme says otherwise. */
     final int backgroundColor;
+    /** Dock band colour (config.xml dock_band_color, or a theme): the band in this colour, as glass with dock_glass or solid at dock_opacity; 0 keeps the built-in near-black band or white glass. */
+    final int dockBandColor;
+    /** Resting colour of the top-bar pills (config.xml pill_color, or a theme); 0 keeps the built-in white glass pills. */
+    final int pillColor;
+    /** Greeting, clock, AM/PM, date and divider colour (config.xml header_color, or a theme), with a shadow; 0 keeps the whites. */
+    final int headerColor;
+    /** The focused dock app's name above the dock (config.xml hero_color, or a theme), with a shadow; 0 keeps white. */
+    final int heroColor;
+    /** The name under a grid tile (config.xml tile_name_color, or a theme), with a shadow; 0 keeps white. */
+    final int tileNameColor;
     /** Time-of-day backdrop, 0 to 100 (config.xml, sky_intensity); 0 keeps the plain background. */
     final int skyIntensity;
     /** Remote keycodes that open Settings through HomeKeyService (config.xml, settings_key_keycodes). */
@@ -272,7 +282,7 @@ final class Config {
                    List<RaceWeekend.Race> raceCalendar, boolean cinematicHome, boolean ambientGlow, boolean appGlow, boolean fadeRows, int homeIdleClockMinutes,
                    boolean keyFilter, boolean dockGlass, String glowStyle, boolean wallpaperCaptions,
                    boolean handleViewInputs, boolean tileMenu, boolean dockEvenPadding, boolean dockBand, boolean cinematicDots, boolean cinematicWhiteFocus, boolean wifiStatusColor, int cinematicScrim, int cinematicArt,
-                   Map<String, Set<String>> wallpaperMoods, boolean gamepadPassthrough, boolean consumeVolumeKeys, boolean powerOnHome, boolean homeLongPressHome, boolean wifiStatusWarnings, List<String> topBarApps, boolean showGreeting, boolean headerWhite, boolean clockWallpaper, int clockWallpaperDim, boolean clockGlow, String glassStyle, boolean singleRow, boolean dockBandAll, boolean lunarDate, int lunarUtcOffset, boolean dateBelowClock, boolean vpnPill, String locale, boolean powerOnHomeAlways, boolean inputsConnectedOnly) {
+                   Map<String, Set<String>> wallpaperMoods, boolean gamepadPassthrough, boolean consumeVolumeKeys, boolean powerOnHome, boolean homeLongPressHome, boolean wifiStatusWarnings, List<String> topBarApps, boolean showGreeting, boolean headerWhite, boolean clockWallpaper, int clockWallpaperDim, boolean clockGlow, String glassStyle, boolean singleRow, boolean dockBandAll, boolean lunarDate, int lunarUtcOffset, boolean dateBelowClock, boolean vpnPill, String locale, boolean powerOnHomeAlways, boolean inputsConnectedOnly, int dockBandColor, int pillColor, int headerColor, int heroColor, int tileNameColor) {
         this.handleViewInputs = handleViewInputs;
         this.tileMenu = tileMenu;
         this.inputKeycodes = inputKeycodes;
@@ -368,6 +378,11 @@ final class Config {
         this.homeLongPressHome = homeLongPressHome;
         this.powerOnHomeAlways = powerOnHomeAlways;
         this.inputsConnectedOnly = inputsConnectedOnly;
+        this.dockBandColor = dockBandColor;
+        this.pillColor = pillColor;
+        this.headerColor = headerColor;
+        this.heroColor = heroColor;
+        this.tileNameColor = tileNameColor;
         this.wifiStatusWarnings = wifiStatusWarnings;
         this.topBarApps = Collections.unmodifiableList(topBarApps);
         this.showGreeting = showGreeting;
@@ -380,6 +395,11 @@ final class Config {
         this.glowStyle = glowStyle(glowStyle);
         this.wallpaperCaptions = wallpaperCaptions;
         this.glassStyle = glassStyle(glassStyle);
+    }
+
+    /** A colour key's config.xml value: {@code #RRGGBB} to an opaque colour, empty or anything else to 0 (the key off). */
+    static int themeColor(String value) {
+        return Festival.parseColor(value);
     }
 
     /** A known glow_style, or radial (the default) for anything else. */
@@ -476,6 +496,11 @@ final class Config {
         boolean homeLongPressHome = res.getBoolean(R.bool.home_long_press_home);
         boolean powerOnHomeAlways = res.getBoolean(R.bool.power_on_home_always);
         boolean inputsConnectedOnly = res.getBoolean(R.bool.inputs_connected_only);
+        int dockBandColor = themeColor(res.getString(R.string.dock_band_color));
+        int pillColor = themeColor(res.getString(R.string.pill_color));
+        int headerColor = themeColor(res.getString(R.string.header_color));
+        int heroColor = themeColor(res.getString(R.string.hero_color));
+        int tileNameColor = themeColor(res.getString(R.string.tile_name_color));
         boolean dockGlass = res.getBoolean(R.bool.dock_glass);
         boolean dockEvenPadding = res.getBoolean(R.bool.dock_even_padding);
         boolean dockBand = res.getBoolean(R.bool.dock_band);
@@ -581,6 +606,11 @@ final class Config {
             homeLongPressHome = bool(json, "home_long_press_home", homeLongPressHome);
             powerOnHomeAlways = bool(json, "power_on_home_always", powerOnHomeAlways);
             inputsConnectedOnly = bool(json, "inputs_connected_only", inputsConnectedOnly);
+            dockBandColor = color(json, "dock_band_color", dockBandColor);
+            pillColor = color(json, "pill_color", pillColor);
+            headerColor = color(json, "header_color", headerColor);
+            heroColor = color(json, "hero_color", heroColor);
+            tileNameColor = color(json, "tile_name_color", tileNameColor);
             dockGlass = bool(json, "dock_glass", dockGlass);
             dockEvenPadding = bool(json, "dock_even_padding", dockEvenPadding);
             dockBand = bool(json, "dock_band", dockBand);
@@ -665,7 +695,7 @@ final class Config {
                 dockBand, cinematicDots, cinematicWhiteFocus, wifiStatusColor, cinematicScrim, cinematicArt, wallpaperMoods, gamepadPassthrough,
                 consumeVolumeKeys, powerOnHome, homeLongPressHome, wifiStatusWarnings, topBarApps, showGreeting, headerWhite, clockWallpaper,
                 Math.max(0, Math.min(90, clockWallpaperDim)), clockGlow, glassStyle, singleRow && dockRow, dockBandAll, lunar, lunarOffset,
-                dateBelowClock, vpnPill, locale, powerOnHomeAlways, inputsConnectedOnly);
+                dateBelowClock, vpnPill, locale, powerOnHomeAlways, inputsConnectedOnly, dockBandColor, pillColor, headerColor, heroColor, tileNameColor);
     }
 
     /**

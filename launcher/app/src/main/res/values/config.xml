@@ -476,6 +476,18 @@
          halo (the rim with a lighter outer glow). Can also be set with "glass_style": "rim" in a theme's config.json. -->
     <string name="glass_style" translatable="false">glass</string>
 
+    <!-- Colour keys, each "#RRGGBB" or empty for the built-in look; a theme's config.json can set them too. They
+         change nothing while empty. dock_band_color colours the dock band (as glass with dock_glass, solid at
+         dock_opacity otherwise, which also scales the glass colour); pill_color is the resting colour of the Inputs,
+         network and Settings pills (the focused pill stays white); header_color the greeting, clock, AM/PM, date and
+         divider; hero_color the focused dock app's name above the dock; tile_name_color the name under a grid tile.
+         The three text keys add a soft shadow so the text reads over a wallpaper. -->
+    <string name="dock_band_color" translatable="false"></string>
+    <string name="pill_color" translatable="false"></string>
+    <string name="header_color" translatable="false"></string>
+    <string name="hero_color" translatable="false"></string>
+    <string name="tile_name_color" translatable="false"></string>
+
     <!-- Tiles drawn from the app's icon and name instead of its banner (for banners that crop badly). -->
     <string-array name="icon_tiles" translatable="false">
     </string-array>

@@ -34,6 +34,8 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     private final boolean singleRow;
     /** dock_band_all: in a single row, the band runs behind every app instead of the dock apps only. */
     private final boolean bandAll;
+    /** dock_band_color as 0xRRGGBB, or -1 for the built-in colours. */
+    private final int bandRgb;
 
     /**
      * @param translucent the cinematic shelf's band: the artwork and the glow show through it.
@@ -44,9 +46,11 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
      * @param bandVisible false skips the band and its edge, so the tiles float on the wallpaper (dock_band).
      * @param singleRow   every app sits in the dock's row (single_row); the band covers the dock apps only, unless bandAll.
      * @param bandAll     with singleRow, the band runs behind every app in the row (dock_band_all).
+     * @param bandColor   dock_band_color as an opaque colour, or 0 for the built-in near-black band or white glass.
      */
     DockDecoration(int dockSize, float density, boolean translucent, boolean names, int opacity, boolean lightGlass,
-                   boolean evenPadding, boolean bandVisible, boolean singleRow, boolean bandAll) {
+                   boolean evenPadding, boolean bandVisible, boolean singleRow, boolean bandAll, int bandColor) {
+        this.bandRgb = bandColor == 0 ? -1 : bandColor & 0xFFFFFF;
         this.dockSize = dockSize;
         this.singleRow = singleRow;
         this.bandAll = singleRow && bandAll;
@@ -55,10 +59,11 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         this.lightGlass = lightGlass;
         this.evenPadding = evenPadding;
         this.bandVisible = bandVisible;
-        band.setColor(translucent ? 0x8C121014 : (Math.round(opacity * 2.55f) << 24) | 0x141416);
+        band.setColor(translucent ? 0x8C121014 : (Math.round(opacity * 2.55f) << 24) | (bandRgb >= 0 ? bandRgb : 0x141416));
         edge.setStyle(Paint.Style.STROKE);
         edge.setStrokeWidth(density);
         edge.setColor(lightGlass ? 0x38FFFFFF : translucent ? 0x26FFFFFF : 0x1FFFFFFF);
+        if (bandRgb >= 0) edge.setColor(0x66FFFFFF);   // a crisper rim on a coloured band
     }
 
     /** Concentric corners: the band's radius is the tiles' radius plus the band's padding around them. */
@@ -141,8 +146,11 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         rect.bottom += namesRoom;
         if (lightGlass && (rect.top != shaderTop || rect.bottom != shaderBottom)) {
             // The pills' glass (pill_bg: white, 18% fading to 8%), a little fainter over this much larger area.
-            band.setShader(new LinearGradient(0, rect.top, 0, rect.bottom, 0x24FFFFFF, 0x0DFFFFFF,
-                    Shader.TileMode.CLAMP));
+            // With dock_band_color the glass takes that colour instead of white, denser so it reads; the paint's
+            // own alpha (dock_opacity) still scales it.
+            band.setShader(bandRgb >= 0
+                    ? new LinearGradient(0, rect.top, 0, rect.bottom, 0xD2000000 | bandRgb, 0x9E000000 | bandRgb, Shader.TileMode.CLAMP)
+                    : new LinearGradient(0, rect.top, 0, rect.bottom, 0x24FFFFFF, 0x0DFFFFFF, Shader.TileMode.CLAMP));
             shaderTop = rect.top;
             shaderBottom = rect.bottom;
         }

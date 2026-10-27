@@ -447,6 +447,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         appGlow = cfg.appGlow;
         if (!ambientGlow) ambient.setVisibility(View.GONE);
         heroName = findViewById(R.id.heroName);
+        if (cfg.heroColor != 0) {
+            // hero_color: the dock app's name in that colour, shadowed like the header.
+            float d = getResources().getDisplayMetrics().density;
+            heroName.setTextColor(cfg.heroColor);
+            heroName.setShadowLayer(6 * d, 0, 2 * d, 0xCC000000);
+        }
         hero = findViewById(R.id.hero);
         // The hero is now a group (name, and the cinematic lines): without this every fade of the default
         // shelf would render it through an offscreen buffer first, as the glow above notes.
@@ -472,6 +478,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             ((TextView) findViewById(R.id.date)).setTextColor(Color.WHITE);
             findViewById(R.id.clockDivider).setBackgroundColor(Color.WHITE);
         }
+        if (cfg.headerColor != 0) applyHeaderColor(cfg.headerColor);
         if (getResources().getBoolean(R.bool.rtl_menu_bar)) {
             // Center Hebrew greetings over the numeric time, independent of a visible AM/PM label. The clock's row
             // is watched too: date_below_clock can move the whole row right under a wider date.
@@ -592,7 +599,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
         });
         if (dockRow) grid.addItemDecoration(new DockDecoration(COLUMNS, density, cinematic, cfg.alwaysShowNames, cfg.dockOpacity, cfg.dockGlass, cfg.dockEvenPadding, cfg.dockBand,
-                singleRow, cfg.dockBandAll));
+                singleRow, cfg.dockBandAll, cfg.dockBandColor));
         if (cfg.fadeRows) TopFade.attach(grid, 48 * density);
         // Reduced motion: the tiles are simply there, with no entrance (reloadApps skips it there too).
         if (animations && !reducedMotion) {
@@ -708,6 +715,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
         btnInputs = findViewById(R.id.btnInputs);
         View btnSettings = findViewById(R.id.btnSettings);
+        if (cfg.pillColor != 0) tintPills((ViewGroup) btnSettings.getParent(), cfg.pillColor, density);
         btnInputs.setOnClickListener(v -> showInputs());
         btnWifi.setOnClickListener(v -> openNetworkPill());
         btnVpn.setOnClickListener(v -> openVpnPill());
@@ -2734,6 +2742,54 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         pill.setPaddingRelative(pad, 0, pad, 0);
         pill.setCompoundDrawablePadding(0);
         pill.getLayoutParams().width = Math.round(42 * density);
+    }
+
+    // ---- colour keys ------------------------------------------------------------------------------
+    /** header_color: the clock block in one colour, with a soft shadow so it reads over a busy wallpaper. */
+    private void applyHeaderColor(int c) {
+        float density = getResources().getDisplayMetrics().density;
+        for (int id : new int[]{R.id.clock, R.id.ampm, R.id.date, R.id.shamsiDate, R.id.lunarDate}) {
+            TextView t = findViewById(id);
+            if (t == null) continue;
+            t.setTextColor(c);
+            t.setShadowLayer(5 * density, 0, 1.5f * density, 0xCC000000);
+        }
+        greeting.setTextColor((c & 0xFFFFFF) | 0xD9000000);
+        greeting.setShadowLayer(4 * density, 0, density, 0xCC000000);
+        greetingColor = greeting.getCurrentTextColor();
+        findViewById(R.id.clockDivider).setBackgroundColor((c & 0xFFFFFF) | 0xB3000000);
+    }
+
+    /**
+     * pill_color: every pill in the top bar (the views styled with pill_bg) gets the same shape in that colour for its
+     * resting state; the focused (white) and activated (reorder) states stay as pill_bg draws them.
+     */
+    private static void tintPills(ViewGroup bar, int color, float density) {
+        for (int i = 0; i < bar.getChildCount(); i++) {
+            View v = bar.getChildAt(i);
+            if (v.getBackground() instanceof android.graphics.drawable.StateListDrawable) v.setBackground(pillDrawable(color, density));
+        }
+    }
+
+    private static Drawable pillDrawable(int color, float density) {
+        int rgb = color & 0xFFFFFF;
+        float radius = 21 * density;
+        android.graphics.drawable.StateListDrawable pill = new android.graphics.drawable.StateListDrawable();
+        GradientDrawable focused = new GradientDrawable();
+        focused.setColor(0xF5FFFFFF);
+        focused.setCornerRadius(radius);
+        pill.addState(new int[]{android.R.attr.state_focused}, focused);
+        GradientDrawable activated = new GradientDrawable();
+        activated.setColor(0x596EC1FF);
+        activated.setStroke(Math.round(1.5f * density), 0xFF6EC1FF);
+        activated.setCornerRadius(radius);
+        pill.addState(new int[]{android.R.attr.state_activated}, activated);
+        GradientDrawable rest = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{0xC8000000 | rgb, 0x8C000000 | rgb});
+        rest.setStroke(Math.round(density), 0x66FFFFFF);
+        rest.setCornerRadius(radius);
+        pill.addState(new int[]{}, rest);
+        return pill;
     }
 
     // ---- festive skin ------------------------------------------------------------------------------
